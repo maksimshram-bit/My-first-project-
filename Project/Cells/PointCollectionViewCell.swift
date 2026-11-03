@@ -97,11 +97,8 @@ class PointCollectionViewCell: UICollectionViewCell {
         }
         
         queueLabel.snp.makeConstraints { make in
-//            make.centerY.equalTo(scheduleLabel)
             make.top.equalTo(scheduleLabel.snp.bottom).offset(5)
             make.leading.equalTo(nameLabel)
-
-//            make.trailing.equalToSuperview().inset(12)
         }
     }
     

@@ -10,20 +10,19 @@ import UIKit
 class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
     var window: UIWindow?
-    private var loadingViewController: LoadingViewController?
+    private var appCoordinator: AppCoordinator?
     
     func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
-        guard let scene = (scene as? UIWindowScene) else { return }
+        guard let windowScene = (scene as? UIWindowScene) else { return }
         
-        window = UIWindow(windowScene: scene)
+        let window = UIWindow(windowScene: windowScene)
+        self.window = window
         
-        showLoadingScreen()
+        let appCoordinator = AppCoordinator(window: window)
+        self.appCoordinator = appCoordinator
+        appCoordinator.start()
         
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { [weak self] in
-            self?.showMainApp()
-        }
-        
-        window?.makeKeyAndVisible()
+        window.makeKeyAndVisible()
     }
 
     func sceneDidDisconnect(_ scene: UIScene) {
@@ -55,24 +54,3 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     }
 }
 
-private extension SceneDelegate {
-    func showLoadingScreen() {
-        let loadingVC = LoadingViewController()
-        loadingVC.modalPresentationStyle = .fullScreen
-        self.loadingViewController = loadingVC
-        window?.rootViewController = loadingVC
-    }
-    
-    func showMainApp() {
-        let tabBarController = MainTabBarController()
-        
-        UIView.transition(with: window!,
-                          duration: 0.5,
-                          options: .transitionCrossDissolve,
-                          animations: { [weak self] in
-            self?.window?.rootViewController = tabBarController
-        }, completion: nil)
-        
-        loadingViewController = nil
-    }
-}

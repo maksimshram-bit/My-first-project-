@@ -11,7 +11,18 @@ class CurrencyConverter: UIViewController {
     private var currentInput = "0"
     private var sourceCurrency: String = "BYN"
     private var targetCurrency: String = "USD"
-
+    
+    private let ratesRepository: RatesRepository
+    
+    init(ratesRepository: RatesRepository) {
+        self.ratesRepository = ratesRepository
+        super.init(nibName: nil, bundle: nil)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
     private lazy var currencyView: UIView = {
         let view = UIView()
         view.layer.cornerRadius = 43
@@ -128,7 +139,7 @@ class CurrencyConverter: UIViewController {
         applyGradientBackground()
         updateLiveResult()
         
-        RatesRepository.shared.fetchAll { [weak self] _ in
+        ratesRepository.fetchAll { [weak self] _ in
             self?.updateLiveResult()
         }
     }
@@ -268,7 +279,7 @@ private extension CurrencyConverter {
     func updateLiveResult() {
         let text = fromTextField.text?.replacingOccurrences(of: ",", with: ".") ?? ""
         let amount = Double(text) ?? 0
-        let result = RatesRepository.shared.convert(amount, from: sourceCurrency, to: targetCurrency)
+        let result = ratesRepository.convert(amount, from: sourceCurrency, to: targetCurrency)
         
         toTextField.text = String(format: "%.2f", result)
         resultLabel.text = String(format: "%.2f %@", result, targetCurrency)

@@ -3,8 +3,17 @@ import SnapKit
 
 class ExchangeRates: UIViewController {
     
-    private let viewModel = ExchangeRatesModel()
+    private let viewModel: ExchangeRatesModel
+    private weak var coordinator: ExchangeRatesCoordinatorProtocol?
     
+    init(viewModel: ExchangeRatesModel, coordinator: ExchangeRatesCoordinatorProtocol) {
+        self.viewModel = viewModel
+        self.coordinator = coordinator
+        super.init(nibName: nil, bundle: nil)
+    }
+    
+    required init?(coder: NSCoder) { fatalError() }
+
     private lazy var allCoursesTableView: UITableView = {
         let table = UITableView(frame: .zero, style: .insetGrouped)
         table.layer.cornerRadius = 15
@@ -99,9 +108,7 @@ private extension ExchangeRates {
     func showCharts(for item: ExchangeTableItem) {
         let history = viewModel.priceHistory(for: item.id)
         
-        let vc = ScheduleController(item: item, history: history, rate: nil)
-        
-        navigationController?.pushViewController(vc, animated: true)
+        coordinator?.showChart(item: item, history: history, rate: nil)
     }
     
 }
@@ -123,15 +130,28 @@ extension ExchangeRates: UITableViewDelegate, UITableViewDataSource {
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        guard let cell = tableView.dequeueReusableCell(withIdentifier: ExchangeTableCell.reuseIdentifier, for: indexPath) as? ExchangeTableCell,
-              let exchangeSection = ExchangeSection(rawValue: indexPath.section) else {
-            return UITableViewCell()
+            guard let cell = tableView.dequeueReusableCell(withIdentifier: ExchangeTableCell.reuseIdentifier, for: indexPath) as? ExchangeTableCell,
+                  let exchangeSection = ExchangeSection(rawValue: indexPath.section) else {
+                return UITableViewCell()
+            }
+            
+            let item = viewModel.items(for: exchangeSection)[indexPath.row]
+            cell.configure(with: item)
+            
+            cell.onFavoriteTapped = { [weak self] in
+                self?.handleFavoriteTap(at: indexPath, item: item, section: exchangeSection)
+            }
+            
+            return cell
         }
-        let item = viewModel.items(for: exchangeSection)[indexPath.row]
-        cell.configure(with: item)
-        cell.delegate = self
-        return cell
-    }
+        
+        private func handleFavoriteTap(at indexPath: IndexPath, item: ExchangeTableItem, section: ExchangeSection) {
+            viewModel.toggleFavorite(id: item.id)
+            
+            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+            
+            allCoursesTableView.reloadSections(IndexSet(integer: section.rawValue), with: .automatic)
+        }
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         guard let section = ExchangeSection(rawValue: indexPath.section) else { return }
@@ -147,18 +167,6 @@ extension ExchangeRates: UITableViewDelegate, UITableViewDataSource {
         header.contentView.backgroundColor = .clear
         header.backgroundView = UIView()
         header.backgroundView?.backgroundColor = .clear
-    }
-}
-
-extension ExchangeRates: ExchangeTableCellDelegate {
-    func didTapFavorite(in cell: ExchangeTableCell) {
-        guard let indexPath = allCoursesTableView.indexPath(for: cell),
-              let section = ExchangeSection(rawValue: indexPath.section) else { return }
-        let item = viewModel.items(for: section)[indexPath.row]
-        viewModel.toggleFavorite(id: item.id)
-        
-        UIImpactFeedbackGenerator(style: .light).impactOccurred()
-        allCoursesTableView.reloadSections(IndexSet(integer: indexPath.section), with: .automatic)
     }
 }
 

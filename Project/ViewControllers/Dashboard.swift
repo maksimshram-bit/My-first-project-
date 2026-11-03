@@ -15,7 +15,18 @@ class Dashboard: UIViewController {
     
     private let scrollView = UIScrollView()
     private let contentView = UIView()
-
+    
+    private let ratesRepository: RatesRepository
+    private weak var coordinator: DashboardCoordinatorProtocol?
+    
+    init(ratesRepository: RatesRepository, coordinator: DashboardCoordinatorProtocol) {
+        self.ratesRepository = ratesRepository
+        self.coordinator = coordinator
+        super.init(nibName: nil, bundle: nil)
+    }
+    
+    required init?(coder: NSCoder) { fatalError() }
+    
     private lazy var titleLabel: UILabel = {
         let label = UILabel()
         label.text = "Welcome to your Bank"
@@ -23,7 +34,7 @@ class Dashboard: UIViewController {
         label.font = UIFont.systemFont(ofSize: 15, weight: .bold)
         return label
     }()
-    
+
     private lazy var notificationsButton: UIButton = {
         let button = UIButton()
         button.setImage(UIImage(systemName: "bell"), for: .normal)
@@ -394,7 +405,7 @@ private extension Dashboard {
     }
 
     func loadLiveResult() {
-        RatesRepository.shared.fetchAll { [weak self] result in
+        ratesRepository.fetchAll { [weak self] result in
             guard let self else { return }
             switch result {
             case .success(let liveRates):
@@ -484,8 +495,7 @@ private extension Dashboard {
     }
     
     @objc func exchangeAllTap() {
-        let exschangeRatesScreen = ExchangeRates()
-        navigationController?.pushViewController(exschangeRatesScreen, animated: true)
+        coordinator?.showAllRates()
     }
     
     @objc func exchangeRatesTap(_ sender: UIControl) {
@@ -529,8 +539,7 @@ private extension Dashboard {
             price * Double.random(in: 0.97...1.03)
         }
 
-        let chartVC = ScheduleController(item: item, history: history, rate: tapped)
-        navigationController?.pushViewController(chartVC, animated: true)
+        coordinator?.showChart(item: item, history: history, rate: tapped)
     }
     
     @objc func oppositeButtonTap() {
@@ -556,13 +565,11 @@ private extension Dashboard {
     }
     
     @objc func converterTransitionTap() {
-        let currencyConverterScreen = CurrencyConverter()
-        navigationController?.pushViewController(currencyConverterScreen, animated: true)
+        coordinator?.showConverter()
     }
     
     @objc func atmFinderTap() {
-        let mapViewScreen = MapView()
-        navigationController?.pushViewController(mapViewScreen, animated: true)
+        coordinator?.showMap()
     }
     
     @objc func amountChanged() {
@@ -606,7 +613,7 @@ private extension Dashboard {
     }
     
     func findRate(code: String) -> Double {
-        RatesRepository.shared.rate(for: code)
+        ratesRepository.rate(for: code)
     }
     
     func setupLocation() {

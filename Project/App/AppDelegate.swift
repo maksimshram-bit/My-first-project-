@@ -1,10 +1,3 @@
-//
-//  AppDelegate.swift
-//  Project
-//
-//  Created by Maksim Shram on 22.07.2026.
-//
-
 import UIKit
 
 @main

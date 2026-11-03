@@ -9,6 +9,15 @@ class Settings: UIViewController {
     private let scrollView = UIScrollView()
     private let contentView = UIView()
     
+    private weak var coordinator: SettingsCoordinatorProtocol?
+    
+    init(coordinator: SettingsCoordinatorProtocol) {
+        self.coordinator = coordinator
+        super.init(nibName: nil, bundle: nil)
+    }
+    
+    required init?(coder: NSCoder) { fatalError() }
+
     private lazy var locationImageView: UIImageView = {
         let imageView = UIImageView()
         imageView.contentMode = .scaleAspectFill

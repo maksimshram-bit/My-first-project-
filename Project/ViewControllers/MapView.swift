@@ -6,11 +6,21 @@ class MapView: UIViewController {
     
     private var points: [MapPoint] = []
     private var filteredPoints: [MapPoint] = []
-    private var searchResults: [MapPoint] = []
     private var selectedFilter: Int = 0
     
     private let locationManager = CLLocationManager()
     
+    private let belarusbankService: BelarusbankAPIServiceProtocol
+    private weak var coordinator: MapCoordinatorProtocol?
+    
+    init(belarusbankService: BelarusbankAPIServiceProtocol, coordinator: MapCoordinatorProtocol) {
+        self.belarusbankService = belarusbankService
+        self.coordinator = coordinator
+        super.init(nibName: nil, bundle: nil)
+    }
+    
+    required init?(coder: NSCoder) { fatalError() }
+
     private lazy var screenTitleLabel: UILabel = {
         let label = UILabel()
         label.text = "Bank map"
@@ -19,7 +29,7 @@ class MapView: UIViewController {
         label.font = .systemFont(ofSize: 15, weight: .bold)
         return label
     }()
-    
+
     private lazy var topCardView: UIView = {
         let view = UIView()
         view.layer.cornerRadius = 15
@@ -267,18 +277,15 @@ private extension MapView {
         button.addTarget(self, action: #selector(filterTapped(_:)), for: .touchUpInside)
     }
     
-    func loadRealData() {
-        
-        BelarusbankAPIService.shared.fetchATMs(city: "Минск") { [weak self] result in
-            guard let self = self else { return }
-            
+    private func loadRealData() {
+        belarusbankService.fetchATMs(city: "Минск") { [weak self] result in
+            guard let self else { return }
             switch result {
             case .success(let atmPoints):
                 self.points = atmPoints
                 self.filteredPoints = atmPoints
                 self.updateAnnotations()
                 self.pointsCollectionView.reloadData()
-                
             case .failure(let error):
                 print("Ошибка загрузки данных: \(error)")
                 self.showErrorAlert(message: "Не удалось загрузить данные о банкоматах")
@@ -470,4 +477,5 @@ extension MapView: CLLocationManagerDelegate {
         manager.stopUpdatingLocation()
     }
 }
+
 

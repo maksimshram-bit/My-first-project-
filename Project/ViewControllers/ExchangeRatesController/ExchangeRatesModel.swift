@@ -17,6 +17,12 @@ final class ExchangeRatesModel {
         currencies + cryptos + metals
     }
     
+    private let ratesRepository: RatesRepository
+    
+    init(ratesRepository: RatesRepository) {
+        self.ratesRepository = ratesRepository
+    }
+
     func items(for section: ExchangeSection) -> [ExchangeTableItem] {
         var result = allItems.filter { $0.section == section }
         
@@ -56,7 +62,7 @@ final class ExchangeRatesModel {
     }
     
     func loadLiveRates(completion: @escaping () -> Void) {
-        RatesRepository.shared.fetchAll { [weak self] result in
+        ratesRepository.fetchAll { [weak self] result in
             guard let self else { return }
             if case .success(let liveRates) = result {
                 self.currencies = liveRates
